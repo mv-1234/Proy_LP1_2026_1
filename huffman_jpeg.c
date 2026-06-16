@@ -59,83 +59,37 @@ void generar_codigos(NodoHuffman *raiz, char codigos[512][256], char *actual, in
     generar_codigos(raiz->der, codigos, actual, prof + 1);
 }
 
-void comprimir_estilo_jpeg(int *datos_entrada, int tam, const char *archivo_salida) {
-    printf(" Iniciando Compresion Estilo JPEG \n");
 
-    printf("[1] Aplicando RLE pre-Huffman...\n");
-    int *datos_rle = (int*)malloc(sizeof(int) * tam * 2);
-    int indice_rle = 0;
-    
-    for (int i = 0; i < tam; i++) {
-        int cuenta_ceros = 0;
-        while (i < tam && datos_entrada[i] == 0 && cuenta_ceros < 15) {
-            cuenta_ceros++;
-            i++;
-        }
-        if (cuenta_ceros > 0) {
-            datos_rle[indice_rle++] = 0;            
-            datos_rle[indice_rle++] = cuenta_ceros; 
-            if(i < tam) datos_rle[indice_rle++] = datos_entrada[i];
-        } else {
-            datos_rle[indice_rle++] = datos_entrada[i];
-        }
-    }
+void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int canales, const char *archivo_salida) {
+    printf(" Iniciando Compresion con Datos Reales \n");
 
-    int frecuencias[512] = {0}; 
-    for (int i = 0; i < indice_rle; i++) {
-        frecuencias[datos_rle[i] + 256]++;
-    }
+   
+    for (int y = 0; y < alto; y += 8) {
+        for (int x = 0; x < ancho; x += 8) {
+            
+            int bloque_actual[64];
+            int sub_indice = 0;
 
-    printf("[2] Construyendo Arbol de Huffman...\n");
-    NodoHuffman *nodos_heap[512];
-    int tam_heap = 0;
+            
+            for (int j = 0; j < 8; j++) {
+                for (int i = 0; i < 8; i++) {
+                    int pixel_x = x + i;
+                    int pixel_y = y + j;
 
-    for (int i = 0; i < 512; i++) {
-        if (frecuencias[i] > 0) {
-            nodos_heap[tam_heap++] = nuevo_nodo(i - 256, frecuencias[i]);
-        }
-    }
+                
+                    if (pixel_x >= ancho) pixel_x = ancho - 1;
+                    if (pixel_y >= alto) pixel_y = alto - 1;
 
-    while (tam_heap > 1) {
-        for (int i = 0; i < tam_heap - 1; i++) {
-            for (int j = i + 1; j < tam_heap; j++) {
-                if (nodos_heap[i]->frecuencia > nodos_heap[j]->frecuencia) {
-                    NodoHuffman *temp = nodos_heap[i];
-                    nodos_heap[i] = nodos_heap[j];
-                    nodos_heap[j] = temp;
+              
+                    int indice_pixel = (pixel_y * ancho + pixel_x) * canales;
+                
+                    bloque_actual[sub_indice++] = pixeles[indice_pixel]; 
                 }
             }
-        }
-        
-        NodoHuffman *izq = nodos_heap[0];
-        NodoHuffman *der = nodos_heap[1];
-        
-        NodoHuffman *padre = nuevo_nodo(999, izq->frecuencia + der->frecuencia); 
-        padre->izq = izq;
-        padre->der = der;
 
-        nodos_heap[0] = padre;
-        for (int i = 1; i < tam_heap - 1; i++) {
-            nodos_heap[i] = nodos_heap[i+1];
+           
         }
-        tam_heap--;
     }
     
-    NodoHuffman *raiz = nodos_heap[0];
-
-    char tabla_codigos[512][256];
-    char buffer_camino[256];
-    generar_codigos(raiz, tabla_codigos, buffer_camino, 0);
-
-    printf("[3] Escribiendo bitstream comprimido a disco...\n");
-    BitWriter *bw = crear_bit_writer(archivo_salida);
-    
-    for (int i = 0; i < indice_rle; i++) {
-        char *codigo = tabla_codigos[datos_rle[i] + 256];
-        escribir_codigo(bw, codigo);
-    }
-
-    cerrar_bit_writer(bw);
-    free(datos_rle);
-    printf("Archivo '%s' generado con exito!\n\n", archivo_salida);
+  
 }
