@@ -21,6 +21,6 @@ BitWriter* crear_bit_writer(const char *nombre_archivo);
 void escribir_bit(BitWriter *bw, int bit);
 void escribir_codigo(BitWriter *bw, const char *codigo);
 void cerrar_bit_writer(BitWriter *bw);
-void comprimir_estilo_jpeg(int *datos_entrada, int tam, const char *archivo_salida);
+void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int canales, const char *archivo_salida);
 
 #endif
