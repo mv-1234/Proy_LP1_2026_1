@@ -209,12 +209,12 @@ void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int cana
     }
     cerrar_bit_writer(bw);
     if (raiz) liberar_arbol(raiz);
-    printf("Compresión finalizada. Archivo guardado: %s\n", archivo_salida);
+    printf("Compresion finalizada. Archivo guardado: %s\n", archivo_salida);
 }
 
 // Lógica corregida para invertir el proceso de compresión
 void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo_salida_imagen) {
-    printf("Iniciando Descompresión Estilo JPEG...\n");
+    printf("Iniciando Descompresion Estilo JPEG...\n");
     BitReader *br = crear_bit_reader(archivo_comprimido);
     if (!br || !br->archivo) {
         printf("Error fatal: No se pudo abrir el archivo comprimido para lectura.\n");
@@ -242,7 +242,7 @@ void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo
     // 2. Reconstruir el Árbol de Huffman
     NodoHuffman* raiz = construir_huffman(frecuencias);
     if (!raiz) {
-        printf("Error fatal: No se encontraron píxeles validos para reconstruir el árbol.\n");
+        printf("Error fatal: No se encontraron pixeles validos para reconstruir el arbol.\n");
         cerrar_bit_reader(br);
         return;
     }
@@ -273,7 +273,7 @@ void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo
                         while (node->izq != NULL && node->der != NULL) {
                             int bit = leer_bit(br);
                             if (bit == -1) {
-                                printf("Error inesperado: Fin de archivo alcanzado antes de terminar un código.\n");
+                                printf("Error inesperado: Fin de archivo alcanzado antes de terminar un codigo.\n");
                                 break; 
                             }
                             if (bit == 0) node = node->izq;
