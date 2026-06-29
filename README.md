@@ -21,14 +21,14 @@ El presente proyecto describe el diseño e implementación de un compresor y des
 *(Nota: Puedes cambiar "Integrante X" por los roles específicos que hayan asumido en el desarrollo, como QA, Coder, etc., según prefieran).*
 
 ## 📎 Recursos
-* *Repositorio GitHub:* [Enlace al Repositorio](#) *(Añade aquí el link de tu repo)*
+* *Repositorio GitHub:* [Enlace al Repositorio](https://github.com/mv-1234/Proy_LP1_2026_1.git) 
 * *Librerías externas:* [stb_image y stb_image_write](https://github.com/nothings/stb)
 
 ## 📂 Estructura del Repositorio
 
 ```text
 Compresor_Huffman/
-├── foto.jpg                    # Imagen de prueba original (Escudo)
+├── foto.jpg                    # Imagen de prueba original
 ├── README.md                   # Documentación principal del proyecto
 ├── Makefile                    # Script de automatización de compilación
 ├── main.c                      # Punto de entrada y manejo de argumentos (CLI)
