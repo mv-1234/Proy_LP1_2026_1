@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="foto.jpg" width="250" alt="Imagen de prueba - Escudo UNI">
+  <img src="Proyecto/foto.jpg" width="250" alt="Imagen de prueba - Escudo UNI">
 </p>
 
 El presente proyecto describe el diseño e implementación de un compresor y descompresor de imágenes en lenguaje C. Utiliza una división en bloques de 8x8 píxeles y aplica el algoritmo de compresión sin pérdida de Huffman, operando mediante la manipulación a nivel de bits para la lectura y escritura de archivos.
@@ -25,12 +25,16 @@ El presente proyecto describe el diseño e implementación de un compresor y des
 ## 📂 Estructura del Repositorio
 
 ```text
-Compresor_Huffman/
-├── foto.jpg                    # Imagen de prueba original
+Proy_LP1_2026_1/
 ├── README.md                   # Documentación principal del proyecto
-├── Makefile                    # Script de automatización de compilación
-├── main.c                      # Punto de entrada y manejo de argumentos (CLI)
-├── huffman_jpeg.c              # Lógica de compresión, bloques y lectura/escritura de bits
-├── huffman_jpeg.h              # Cabeceras y estructuras (NodoHuffman, BitReader, BitWriter)
-├── stb_image.h                 # Librería externa para la carga de imágenes
-└── stb_image_write.h           # Librería externa para exportar el resultado decodificado
+├── PPT/                        # Presentación y archivos comprimidos
+│   ├── Presentacion.txt
+│   └── Proyecto LP1.rar
+└── Proyecto/                   # Código fuente principal
+    ├── foto.jpg                # Imagen de prueba original
+    ├── Makefile                # Script de automatización de compilación
+    ├── main.c                  # Punto de entrada y manejo de argumentos (CLI)
+    ├── huffman_jpeg.c          # Lógica de compresión, bloques y lectura/escritura de bits
+    ├── huffman_jpeg.h          # Cabeceras y estructuras (NodoHuffman, BitReader, BitWriter)
+    ├── stb_image.h             # Librería externa para la carga de imágenes
+    └── stb_image_write.h       # Librería externa para exportar el resultado decodificado
