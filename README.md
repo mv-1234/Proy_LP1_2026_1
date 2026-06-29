@@ -1,34 +1,44 @@
-# Compresor y Descompresor de Datos (RLE + Huffman) en C
+<h1 align="center">
+  <strong>IMPACTA</strong>
+</h1>
 
-Este proyecto implementa dos de los algoritmos de compresión de datos más clásicos e importantes en las ciencias de la computación y las telecomunicaciones: **Run-Length Encoding (RLE)** y la **Codificación de Huffman**. El sistema está desarrollado completamente en **C** de forma modular y está diseñado para procesar y optimizar el almacenamiento de archivos de texto y archivos binarios.
+<p align="center">
+  Simulador de partículas 2D con física básica
+</p>
 
-## 📋 Descripción del Proyecto
 
-El objetivo principal es ofrecer una herramienta por línea de comandos (CLI) eficiente que permita reducir el tamaño de diversos archivos mediante dos enfoques distintos:
-1. **RLE (Run-Length Encoding):** Un algoritmo de compresión sin pérdidas ideal para datos que contienen secuencias repetitivas consecutivas.
-2. **Codificación de Huffman:** Un algoritmo basado en la frecuencia de caracteres/bytes que utiliza un árbol binario óptimo (implementado mediante una cola de prioridad o Min-Heap) para asignar códigos de longitud variable.
+<p align="center">
+  <img src="example.gif" width="250" alt="Ejemplo de gif de salida">
+</p>
 
-El programa también incluye un módulo de analíticas que calcula de forma automática métricas críticas de rendimiento para comparar la eficiencia de ambos métodos.
+El presente proyecto describe el diseño e implementación de un simulador de colisiones de partículas en 2D, estructurado como una plataforma dual para la física computacional y la generación estructurada de datos, idónea para Machine Learning.
 
-## ✨ Características Clave
+## 👥 Roles
+* *QA, Testing & DevOps:* Tom Jordan Pérez López  
+* *Developer 1 (C):* Ricardo Gaspar Reyes Campos
+* *Apoyo transversal:* Sandro Giancarlo Sanchez Vicaña
+* *Developer 2 (Python):* Raúl Antonio Guzmán López
 
-* **Compresión Multiformato:** Soporte completo para el procesamiento de archivos de texto plano (`.txt`) y archivos binarios.
-* **Cola de Prioridad Eficiente:** Estructura de datos Min-Heap para la construcción óptima del árbol de Huffman.
-* **Deserialización Automática:** Serialización del árbol de frecuencias directamente en la cabecera del archivo comprimido (`.huf`) para garantizar una descompresión autónoma.
-* **Interfaz de Línea de Comandos (CLI):** Sintaxis limpia y estándar para facilitar la automatización y el uso en terminales Linux/Unix.
-* **Módulo de Métricas:** Cálculo en tiempo real del tiempo de ejecución, tamaño original vs. comprimido, y el ratio exacto de compresión.
+## 📎 Recursos
+* *Diapositivas (Canva):* [Presentación del Proyecto](https://canva.link/zb432bjr0ofj4bi)
 
-## 📂 Estructura del Proyecto
-
-El código fuente se encuentra organizado de manera modular siguiendo las mejores prácticas de desarrollo en C:
+## 📂 Estructura del Repositorio
 
 ```text
-├── src/
-│   ├── main.c           # Punto de entrada y gestión de la CLI
-│   ├── huffman.c        # Lógica del árbol, min-heap y codificación de Huffman
-│   ├── huffman.h        # Cabeceras y estructuras para Huffman
-│   ├── rle.c            # Implementación del algoritmo RLE
-│   └── rle.h            # Cabeceras y estructuras para RLE
-├── tests/               # Archivos y scripts de prueba
-├── Makefile             # Automatización de la compilación
-└── README.md            # Documentación del proyecto
+Proy_LP1_2026_1/
+├── .gitignore                  # Archivos y carpetas ignorados por Git
+├── example.gif                 # Ejemplo de la salida deseada
+├── README.md                   # Documentación principal del proyecto
+├── guia_de_uso_rapido.md       # Manual conciso para probar el programa del proyecto
+├── docs/                       # Documentación adicional, informes o manuales del proyecto
+└── src/                        # Código fuente principal
+    ├── c_modules/              # Módulos del simulador en C
+    │   ├── Fisica.c            # Lógica de físicas, movimientos y colisiones
+    │   ├── Input.c             # Manejo de menús y entrada de datos del usuario
+    |   ├── Output.c            # Manejo de los archivos de salida de la simulación
+    │   ├── Opti.c              # Archivo principal (Main) y optimización espacial
+    │   └── Simulador.h         # Cabecera central (estructuras, prototipos y librerías)
+    ├── visualizar.py           # Script de Python para renderizar la simulación
+    ├── run.bat                 # Script ejecutable para probar el programa (compilación, ejecución y renderizado)
+    ├── requirements.txt        # Archivo de texto con las depedencias para el módulo en Python
+    └── makefile                # Script de automatización (compilación, ejecución y renderizado)
