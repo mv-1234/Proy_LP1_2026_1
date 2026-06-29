@@ -1,6 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -g -lm
 
+# Nota: Asegurate de descargar 'stb_image_write.h' en la misma carpeta 
+# desde el repositorio oficial de nothings/stb en github.
+
 all: compresor
 
 compresor: main.o huffman_jpeg.o

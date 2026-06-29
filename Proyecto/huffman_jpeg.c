@@ -1,13 +1,18 @@
 #include "huffman_jpeg.h"
 
-// Funcion auxiliar para qsort que compara las frecuencias de dos nodos
+// --- [ LIBRERÍA STB PARA ESCRIBIR IMÁGENES ] ---
+// Usamos stb_image_write para exportar el resultado decodificado
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+// Función auxiliar para qsort
 int comparar_nodos(const void* a, const void* b) {
     NodoHuffman* n1 = *(NodoHuffman**)a;
     NodoHuffman* n2 = *(NodoHuffman**)b;
     return n1->frecuencia - n2->frecuencia;
 }
 
-// Libera la memoria del arbol de Huffman de forma recursiva
+// Libera la memoria del árbol de Huffman recursivamente
 void liberar_arbol(NodoHuffman* raiz) {
     if (!raiz) return;
     liberar_arbol(raiz->izq);
@@ -15,7 +20,8 @@ void liberar_arbol(NodoHuffman* raiz) {
     free(raiz);
 }
 
-// Prepara la estructura para escribir bits en el archivo binario
+// Estructura de bits
+
 BitWriter* crear_bit_writer(const char *nombre_archivo) {
     BitWriter *bw = (BitWriter*)malloc(sizeof(BitWriter));
     bw->archivo = fopen(nombre_archivo, "wb");
@@ -24,7 +30,6 @@ BitWriter* crear_bit_writer(const char *nombre_archivo) {
     return bw;
 }
 
-// Inserta un 0 o un 1 en el buffer y lo guarda en el archivo cuando se llena un byte
 void escribir_bit(BitWriter *bw, int bit) {
     bw->buffer <<= 1;          
     if (bit) bw->buffer |= 1;  
@@ -37,43 +42,77 @@ void escribir_bit(BitWriter *bw, int bit) {
     }
 }
 
-// Lee una cadena de texto de 0s y 1s para mandarla al escritor de bits
 void escribir_codigo(BitWriter *bw, const char *codigo) {
     for (int i = 0; codigo[i] != '\0'; i++) {
         escribir_bit(bw, codigo[i] == '1');
     }
 }
 
-// Empuja los bits sobrantes alineados a la izquierda y cierra el archivo
 void cerrar_bit_writer(BitWriter *bw) {
     if (bw->bits_en_buffer > 0) {
         bw->buffer <<= (8 - bw->bits_en_buffer); 
         fputc(bw->buffer, bw->archivo);
     }
-    fclose(bw->archivo);
+    if (bw->archivo) fclose(bw->archivo);
     free(bw); 
 }
 
-// Reserva memoria para un nuevo elemento del arbol
+// Lectura de bits
+
+// Prepara la lectura binaria
+BitReader* crear_bit_reader(const char *nombre_archivo) {
+    BitReader *br = (BitReader*)malloc(sizeof(BitReader));
+    br->archivo = fopen(nombre_archivo, "rb");
+    br->buffer = 0;
+    br->bits_restantes = 0;
+    return br;
+}
+
+// Extrae un solo bit del archivo comprimido
+int leer_bit(BitReader *br) {
+    // Si consumimos todos los bits del búfer actual, leemos el siguiente byte
+    if (br->bits_restantes == 0) {
+        if (fread(&br->buffer, 1, 1, br->archivo) < 1) {
+            return -1; // Fin de archivo o error
+        }
+        br->bits_restantes = 8;
+    }
+    
+    // Extraer el bit más significativo actual 
+    int bit = (br->buffer >> (br->bits_restantes - 1)) & 1;
+    br->bits_restantes--;
+    return bit;
+}
+
+// Cierra y libera el lector
+void cerrar_bit_reader(BitReader *br) {
+    if (br->archivo) fclose(br->archivo);
+    free(br);
+}
+
+// Construccion del arbol de Huffman
+
 NodoHuffman* nuevo_nodo(int valor, int frec) {
     NodoHuffman* nodo = (NodoHuffman*)malloc(sizeof(NodoHuffman));
+    // Validación de puntero para mayor estabilidad
+    if (!nodo) {
+        printf("Error fatal: No se pudo asignar memoria para un nodo de Huffman.\n");
+        exit(1);
+    }
     nodo->valor = valor;
     nodo->frecuencia = frec;
     nodo->izq = nodo->der = NULL;
     return nodo;
 }
 
-// Recorre las ramas para asignar la ruta binaria a cada valor
 void generar_codigos(NodoHuffman *raiz, char codigos[512][256], char *actual, int prof) {
     if (!raiz) return;
-
-    // Si llega a una hoja guarda el codigo y le suma 256 para evitar indices negativos
     if (!raiz->izq && !raiz->der) {
         actual[prof] = '\0';
+        // El char tiene signo: de [-256, 256] se debe pasar a [0, 512]
         strcpy(codigos[raiz->valor + 256], actual);
         return;
     }
-
     actual[prof] = '0';
     generar_codigos(raiz->izq, codigos, actual, prof + 1);
     
@@ -81,115 +120,185 @@ void generar_codigos(NodoHuffman *raiz, char codigos[512][256], char *actual, in
     generar_codigos(raiz->der, codigos, actual, prof + 1);
 }
 
-// Agrupa los valores de menor a mayor frecuencia hasta formar el arbol completo
 NodoHuffman* construir_huffman(int frecuencias[512]) {
     NodoHuffman* lista[512];
     int n = 0;
-
     for (int i = 0; i < 512; i++) {
         if (frecuencias[i] > 0) {
+            // Revertir el índice para guardar el valor real del píxel en el nodo
             lista[n++] = nuevo_nodo(i - 256, frecuencias[i]);
         }
     }
-
     if (n == 0) return NULL;
-
     while (n > 1) {
         qsort(lista, n, sizeof(NodoHuffman*), comparar_nodos);
-        
         NodoHuffman* izq = lista[0];
         NodoHuffman* der = lista[1];
-        
-        // Crea un nodo interno temporal que suma las dos frecuencias menores
+        // Crear nodo padre con valor nulo (debe ser unsigned)
         NodoHuffman* nuevo = nuevo_nodo(-256, izq->frecuencia + der->frecuencia);
         nuevo->izq = izq;
         nuevo->der = der;
-        
         lista[0] = nuevo;
         lista[1] = lista[n - 1];
         n--;
     }
-
     return lista[0];
 }
 
-// Funcion principal que simula los bloques de procesamiento de una imagen
-void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int canales, const char *archivo_salida) {
-    printf(" Iniciando Compresion con Datos Reales \n");
+// Metodos esenciales: manejo de la imagen como tal
 
-    // Crea un arreglo para contar las apariciones de cada valor en toda la imagen
+void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int canales, const char *archivo_salida) {
+    printf("Iniciando Compresión Estilo JPEG...\n");
     int frecuencias[512] = {0};
     
+    // Conteo de frecuencias respetando el recorrido espacial por bloques de 8x8
+    // Asegura que la estadística sea coherente con el orden espacial del bitstream.
     for (int y = 0; y < alto; y += 8) {
         for (int x = 0; x < ancho; x += 8) {
             for (int j = 0; j < 8; j++) {
                 for (int i = 0; i < 8; i++) {
-                    int pixel_x = x + i;
-                    int pixel_y = y + j;
-
-                    // Repite el ultimo pixel si el bloque queda fuera de los limites de la imagen
-                    if (pixel_x >= ancho) pixel_x = ancho - 1;
-                    if (pixel_y >= alto) pixel_y = alto - 1;
-
+                    // Lógica original de 'clamping': repetir píxeles de los bordes para rellenar el bloque
+                    int pixel_x = (x + i >= ancho) ? ancho - 1 : x + i;
+                    int pixel_y = (y + j >= alto) ? alto - 1 : y + j;
                     int indice_pixel = (pixel_y * ancho + pixel_x) * canales;
-                    int valor_pixel = pixeles[indice_pixel];
-                    
-                    frecuencias[valor_pixel + 256]++;
+                    // Contar frecuencias para cada canal
+                    for (int c = 0; c < canales; c++) {
+                        frecuencias[pixeles[indice_pixel + c] + 256]++;
+                    }
                 }
             }
         }
     }
 
-    // Forma la estructura de arbol y prepara el diccionario de prefijos
+    // Construcción del árbol y generación de códigos
     NodoHuffman* raiz = construir_huffman(frecuencias);
-    
     char codigos[512][256];
     char ruta_actual[256];
     for (int i = 0; i < 512; i++) codigos[i][0] = '\0'; 
-    
-    if (raiz) {
-        generar_codigos(raiz, codigos, ruta_actual, 0);
-    }
+    if (raiz) generar_codigos(raiz, codigos, ruta_actual, 0);
 
-    // Abre el archivo resultante para empezar a guardar la informacion comprimida
     BitWriter *bw = crear_bit_writer(archivo_salida);
-    if (!bw || !bw->archivo) {
-        printf(" Error No se pudo crear el archivo %s\n", archivo_salida);
-        if (raiz) liberar_arbol(raiz);
-        return;
-    }
+    if (!bw || !bw->archivo) return;
 
-    // Recorre nuevamente la imagen por bloques de 8x8
+    // Escribir la cabecera, crítico para el decompressor
+    // Fwrite para guardar los datos binarios tal cual están en memoria
+    fwrite(&ancho, sizeof(int), 1, bw->archivo);
+    fwrite(&alto, sizeof(int), 1, bw->archivo);
+    fwrite(&canales, sizeof(int), 1, bw->archivo);
+    fwrite(frecuencias, sizeof(int), 512, bw->archivo);
+
+    // Escritura del bitstream respetando el recorrido espacial
+    printf("Generando flujo binario...\n");
     for (int y = 0; y < alto; y += 8) {
         for (int x = 0; x < ancho; x += 8) {
-            
-            int bloque_actual[64];
-            int sub_indice = 0;
-
             for (int j = 0; j < 8; j++) {
                 for (int i = 0; i < 8; i++) {
-                    int pixel_x = x + i;
-                    int pixel_y = y + j;
-
-                    if (pixel_x >= ancho) pixel_x = ancho - 1;
-                    if (pixel_y >= alto) pixel_y = alto - 1;
-
-                    int indice_pixel = (pixel_y * ancho + pixel_x) * canales;
-                    bloque_actual[sub_indice++] = pixeles[indice_pixel]; 
+                    int pixel_x = (x + i >= ancho) ? ancho - 1 : x + i;
+                    int pixel_y = (y + j >= alto) ? alto - 1 : y + j;
+                    int indice = (pixel_y * ancho + pixel_x) * canales;
+                    // Escribir el código binario para cada canal del píxel
+                    for (int c = 0; c < canales; c++) {
+                        escribir_codigo(bw, codigos[pixeles[indice + c] + 256]);
+                    }
                 }
-            }
-
-            // Busca el codigo de cada pixel en el diccionario y lo manda a escribir en binario
-            for (int k = 0; k < 64; k++) {
-                int valor = bloque_actual[k];
-                escribir_codigo(bw, codigos[valor + 256]);
             }
         }
     }
-    
-    // Finaliza el flujo de bits y limpia la memoria
     cerrar_bit_writer(bw);
     if (raiz) liberar_arbol(raiz);
+    printf("Compresión finalizada. Archivo guardado: %s\n", archivo_salida);
+}
 
-    printf(" Compresion finalizada con exito Archivo '%s' guardado\n", archivo_salida);
+// Lógica corregida para invertir el proceso de compresión
+void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo_salida_imagen) {
+    printf("Iniciando Descompresión Estilo JPEG...\n");
+    BitReader *br = crear_bit_reader(archivo_comprimido);
+    if (!br || !br->archivo) {
+        printf("Error fatal: No se pudo abrir el archivo comprimido para lectura.\n");
+        return;
+    }
+
+    int ancho, alto, canales;
+    int frecuencias[512];
+
+    // 1. Leer la metadata de la cabecera
+    printf("Leyendo metadata y cabecera...\n");
+    if (fread(&ancho, sizeof(int), 1, br->archivo) < 1) {
+        printf("Error: Archivo comprimido corrupto o incompleto.\n");
+        cerrar_bit_reader(br);
+        return;
+    }
+    fread(&alto, sizeof(int), 1, br->archivo);
+    fread(&canales, sizeof(int), 1, br->archivo);
+    if (fread(frecuencias, sizeof(int), 512, br->archivo) < 512) {
+         printf("Error: Tabla de frecuencias incompleta.\n");
+         cerrar_bit_reader(br);
+         return;
+    }
+
+    // 2. Reconstruir el Árbol de Huffman
+    NodoHuffman* raiz = construir_huffman(frecuencias);
+    if (!raiz) {
+        printf("Error fatal: No se encontraron píxeles válidos para reconstruir el árbol.\n");
+        cerrar_bit_reader(br);
+        return;
+    }
+
+    // 3. Decodificación por Bloques de 8x8 píxeles
+    // El orden de los bucles debe ser IDÉNTICO a la compresión.
+    // Esto asegura que extraigamos la cantidad correcta de códigos del bitstream.
+    printf("Reconstruyendo imagen espacial por bloques de 8x8...\n");
+    int total_pixeles = ancho * alto * canales;
+    unsigned char *pixeles_output = (unsigned char*)calloc(total_pixeles, 1);
+    // Validación de asignación de memoria
+    if (!pixeles_output) {
+        printf("Error fatal: No se pudo asignar memoria para la imagen de salida (%dx%dx%d).\n", ancho, alto, canales);
+        liberar_arbol(raiz);
+        cerrar_bit_reader(br);
+        return;
+    }
+    
+    for (int y = 0; y < alto; y += 8) {
+        for (int x = 0; x < ancho; x += 8) {
+            // Procesar cada uno de los 64 elementos que forman este bloque
+            for (int j = 0; j < 8; j++) {
+                for (int i = 0; i < 8; i++) {
+                    
+                    // Decodificación de los códigos de Huffman para cada canal
+                    for (int c = 0; c < canales; c++) {
+                        NodoHuffman *node = raiz;
+                        while (node->izq != NULL && node->der != NULL) {
+                            int bit = leer_bit(br);
+                            if (bit == -1) {
+                                printf("Error inesperado: Fin de archivo alcanzado antes de terminar un código.\n");
+                                break; 
+                            }
+                            if (bit == 0) node = node->izq;
+                            else node = node->der;
+                        }
+
+                        // Se ha alcanzado un nodo hoja, hemos encontrado el valor del canal.
+                        // Lógica de 'clamping' inversa: solo guardamos los píxeles que están dentro de la imagen real.
+                        // El compresor escribió códigos de más para rellenar los bloques en los bordes.
+                        if (x + i < ancho && y + j < alto) {
+                            int coord_x = x + i;
+                            int coord_y = y + j;
+                            int indice_final = (coord_y * ancho + coord_x) * canales + c;
+                            pixeles_output[indice_final] = (unsigned char)node->valor;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cerrar_bit_reader(br);
+    liberar_arbol(raiz);
+
+    // 4. Exportar la imagen reconstruida
+    printf("Generando archivo JPG final...\n");
+    stbi_write_jpg(archivo_salida_imagen, ancho, alto, canales, pixeles_output, 100);
+    free(pixeles_output);
+    
+    printf("Descompresión finalizada con éxito. Imagen guardada como: %s\n", archivo_salida_imagen);
 }

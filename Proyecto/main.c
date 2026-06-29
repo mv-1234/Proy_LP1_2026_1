@@ -1,33 +1,44 @@
-// Define la implementacion de stb_image para que el compilador cree el codigo fuente de la libreria aqui
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "huffman_jpeg.h"
 
 int main(int argc, char *argv[]) {
-    // Verificamos que el usuario haya proporcionado la imagen de entrada y el nombre de salida
-    if (argc < 3) {
-        printf("Uso: %s <imagen_entrada.jpg/png/bmp> <output.huf>\n", argv[0]);
-        return 1; // Salida con error
-    }
-
-    int ancho, alto, canales;
-    
-    // Carga la imagen utilizando stb_image. 
-    // Devuelve un puntero al arreglo de pixeles y llena ancho, alto y canales
-    // El '0' al final significa que queremos cargar los canales tal como estan en el archivo
-    unsigned char *pixeles = stbi_load(argv[1], &ancho, &alto, &canales, 0);
-    
-    // Verificacion de errores por si la imagen no existe o esta corrupta
-    if (!pixeles) {
-        printf("Error al cargar la imagen.\n");
+    // Requerimos una bandera de operacion y archivos in/out
+    if (argc < 4) {
+        printf("Uso para comprimir:   %s -c <imagen.jpg> <archivo.huf>\n", argv[0]);
+        printf("Uso para descomprimir: %s -d <archivo.huf> <salida.jpg>\n", argv[0]);
         return 1;
     }
 
-    // Llamamos a la funcion de compresion
-    comprimir_estilo_jpeg(pixeles, ancho, alto, canales, argv[2]);
+    const char *modo = argv[1];
+    const char *input = argv[2];
+    const char *output = argv[3];
 
-    // Liberamos la memoria asignada por stb_image para los pixeles
-    stbi_image_free(pixeles);
-    
+    if (strcmp(modo, "-c") == 0) {
+        int ancho, alto, canales;
+        unsigned char *pixeles = stbi_load(input, &ancho, &alto, &canales, 0);
+        
+        if (!pixeles) {
+            printf("Error al cargar la imagen.\n");
+            return 1;
+        }
+
+        comprimir_estilo_jpeg(pixeles, ancho, alto, canales, output);
+        stbi_image_free(pixeles);
+
+    } else if (strcmp(modo, "-d") == 0) {
+        // La logica de stb_image_write ya esta dentro de la funcion en huffman_jpeg.c
+        decodificar_estilo_jpeg(input, output);
+        
+    } else {
+        printf("Modo no reconocido. Use -c (comprimir) o -d (descomprimir).\n");
+        return 1;
+    }
+
     return 0;
 }
+
+/*comandos: gcc -Wall -g main.c huffman_jpeg.c -o compresor.exe   (compilar)
+    .\compresor.exe -c foto.jpg foto_corregida.huf  (comprimir)
+    .\compresor.exe -d foto_corregida.huf foto_reconstruida_corregida.jpg (descomprimir)
+*/

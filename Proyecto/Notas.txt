@@ -1,2 +1,0 @@
-mingw32-make
-gcc -Wall -g main.c huffman_jpeg.c -o compresor.exe -lm
