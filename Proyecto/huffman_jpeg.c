@@ -1,11 +1,11 @@
 #include "huffman_jpeg.h"
 
-// --- [ LIBRERÍA STB PARA ESCRIBIR IMÁGENES ] ---
+// Libreria principal
 // Usamos stb_image_write para exportar el resultado decodificado
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-// Función auxiliar para qsort
+// Función auxiliar para qsort: argumento int compare(void* a1, void* a2)
 int comparar_nodos(const void* a, const void* b) {
     NodoHuffman* n1 = *(NodoHuffman**)a;
     NodoHuffman* n2 = *(NodoHuffman**)b;
@@ -22,6 +22,7 @@ void liberar_arbol(NodoHuffman* raiz) {
 
 // Estructura de bits
 
+//inicializar el BitWriter
 BitWriter* crear_bit_writer(const char *nombre_archivo) {
     BitWriter *bw = (BitWriter*)malloc(sizeof(BitWriter));
     bw->archivo = fopen(nombre_archivo, "wb");
@@ -30,6 +31,7 @@ BitWriter* crear_bit_writer(const char *nombre_archivo) {
     return bw;
 }
 
+//escribir un bit
 void escribir_bit(BitWriter *bw, int bit) {
     bw->buffer <<= 1;          
     if (bit) bw->buffer |= 1;  
@@ -41,6 +43,7 @@ void escribir_bit(BitWriter *bw, int bit) {
         bw->bits_en_buffer = 0;
     }
 }
+
 
 void escribir_codigo(BitWriter *bw, const char *codigo) {
     for (int i = 0; codigo[i] != '\0'; i++) {
@@ -125,7 +128,7 @@ NodoHuffman* construir_huffman(int frecuencias[512]) {
     int n = 0;
     for (int i = 0; i < 512; i++) {
         if (frecuencias[i] > 0) {
-            // Revertir el índice para guardar el valor real del píxel en el nodo
+            // Revertir el índice para guardar el valor real del píxel en el nodo (de unsigned char a char)
             lista[n++] = nuevo_nodo(i - 256, frecuencias[i]);
         }
     }
@@ -134,7 +137,7 @@ NodoHuffman* construir_huffman(int frecuencias[512]) {
         qsort(lista, n, sizeof(NodoHuffman*), comparar_nodos);
         NodoHuffman* izq = lista[0];
         NodoHuffman* der = lista[1];
-        // Crear nodo padre con valor nulo (debe ser unsigned)
+        // Crear nodo padre con valor nulo
         NodoHuffman* nuevo = nuevo_nodo(-256, izq->frecuencia + der->frecuencia);
         nuevo->izq = izq;
         nuevo->der = der;
@@ -148,7 +151,7 @@ NodoHuffman* construir_huffman(int frecuencias[512]) {
 // Metodos esenciales: manejo de la imagen como tal
 
 void comprimir_estilo_jpeg(unsigned char *pixeles, int ancho, int alto, int canales, const char *archivo_salida) {
-    printf("Iniciando Compresión Estilo JPEG...\n");
+    printf("Iniciando Compresion Estilo JPEG...\n");
     int frecuencias[512] = {0};
     
     // Conteo de frecuencias respetando el recorrido espacial por bloques de 8x8
@@ -239,7 +242,7 @@ void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo
     // 2. Reconstruir el Árbol de Huffman
     NodoHuffman* raiz = construir_huffman(frecuencias);
     if (!raiz) {
-        printf("Error fatal: No se encontraron píxeles válidos para reconstruir el árbol.\n");
+        printf("Error fatal: No se encontraron píxeles validos para reconstruir el árbol.\n");
         cerrar_bit_reader(br);
         return;
     }
@@ -300,5 +303,5 @@ void decodificar_estilo_jpeg(const char *archivo_comprimido, const char *archivo
     stbi_write_jpg(archivo_salida_imagen, ancho, alto, canales, pixeles_output, 100);
     free(pixeles_output);
     
-    printf("Descompresión finalizada con éxito. Imagen guardada como: %s\n", archivo_salida_imagen);
+    printf("Descompresion finalizada con exito. Imagen guardada como: %s\n", archivo_salida_imagen);
 }
