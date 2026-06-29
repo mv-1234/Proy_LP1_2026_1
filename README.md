@@ -1,44 +1,41 @@
 <h1 align="center">
-  <strong>IMPACTA</strong>
+  <strong>P09 — Compresor/descompresor RLE + Huffman</strong>
 </h1>
 
 <p align="center">
-  Simulador de partículas 2D con física básica
+  Algoritmos clásicos de compresión de datos en C
 </p>
-
 
 <p align="center">
-  <img src="example.gif" width="250" alt="Ejemplo de gif de salida">
+  <img src="metrics_example.png" width="450" alt="Ejemplo de salida de métricas en consola">
 </p>
 
-El presente proyecto describe el diseño e implementación de un simulador de colisiones de partículas en 2D, estructurado como una plataforma dual para la física computacional y la generación estructurada de datos, idónea para Machine Learning.
+El presente proyecto describe el diseño e implementación de una herramienta por línea de comandos (CLI) capaz de comprimir y descomprimir archivos de texto y binarios. Actúa como un entorno práctico para analizar teórica y empíricamente la eficiencia algorítmica de **Run-Length Encoding (RLE)** y la **Codificación de Huffman**, utilizando serialización de árboles y colas de prioridad (Min-Heap).
 
 ## 👥 Roles
-* *QA, Testing & DevOps:* Tom Jordan Pérez López  
-* *Developer 1 (C):* Ricardo Gaspar Reyes Campos
-* *Apoyo transversal:* Sandro Giancarlo Sanchez Vicaña
-* *Developer 2 (Python):* Raúl Antonio Guzmán López
+* *Integrante 1:* [Apellidos y Nombres] - Perfil en el proyecto (ej. Arquitectura del árbol y CLI)
+* *Integrante 2:* [Apellidos y Nombres] - Perfil en el proyecto (ej. Implementación de Huffman y bits)
+* *Integrante 3:* [Apellidos y Nombres] - Perfil en el proyecto (ej. Implementación de RLE y Métricas)
 
 ## 📎 Recursos
-* *Diapositivas (Canva):* [Presentación del Proyecto](https://canva.link/zb432bjr0ofj4bi)
+* *Análisis y Diseño (Entregable 1):* [Enlace al documento de requerimientos y casos de uso](#)
+* *Documento de Arquitectura:* [Enlace a la tabla comparativa y pruebas reales](#)
 
 ## 📂 Estructura del Repositorio
 
 ```text
-Proy_LP1_2026_1/
+Proyecto_P09/
 ├── .gitignore                  # Archivos y carpetas ignorados por Git
-├── example.gif                 # Ejemplo de la salida deseada
+├── metrics_example.png         # Captura de pantalla de los ratios de compresión obtenidos
 ├── README.md                   # Documentación principal del proyecto
-├── guia_de_uso_rapido.md       # Manual conciso para probar el programa del proyecto
-├── docs/                       # Documentación adicional, informes o manuales del proyecto
-└── src/                        # Código fuente principal
-    ├── c_modules/              # Módulos del simulador en C
-    │   ├── Fisica.c            # Lógica de físicas, movimientos y colisiones
-    │   ├── Input.c             # Manejo de menús y entrada de datos del usuario
-    |   ├── Output.c            # Manejo de los archivos de salida de la simulación
-    │   ├── Opti.c              # Archivo principal (Main) y optimización espacial
-    │   └── Simulador.h         # Cabecera central (estructuras, prototipos y librerías)
-    ├── visualizar.py           # Script de Python para renderizar la simulación
-    ├── run.bat                 # Script ejecutable para probar el programa (compilación, ejecución y renderizado)
-    ├── requirements.txt        # Archivo de texto con las depedencias para el módulo en Python
-    └── makefile                # Script de automatización (compilación, ejecución y renderizado)
+├── docs/                       # Entregables 1 y 2 (Diseño, arquitectura y tablas comparativas)
+├── test_files/                 # Archivos de prueba (texto y binarios/imágenes)
+└── src/                        # Código fuente principal en C
+    ├── huffman.c               # Lógica del árbol de Huffman, Min-Heap y operaciones bit a bit
+    ├── huffman.h               # Cabeceras y estructuras del algoritmo de Huffman
+    ├── rle.c                   # Lógica de compresión y descompresión del algoritmo RLE
+    ├── rle.h                   # Cabeceras para el módulo RLE
+    ├── cli.c                   # Punto de entrada (Main), parseo de argumentos y cálculo de métricas
+    ├── stb_image.h             # Librería auxiliar para carga de imágenes en pruebas (opcional)
+    ├── stb_image_write.h       # Librería auxiliar para exportar imágenes reconstruidas (opcional)
+    └── Makefile                # Script de automatización para compilación (gcc) y limpieza
