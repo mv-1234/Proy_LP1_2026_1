@@ -12,7 +12,7 @@
 
 El presente proyecto describe el diseño e implementación de un compresor y descompresor de imágenes en lenguaje C. Utiliza una división en bloques de 8x8 píxeles y aplica el algoritmo de compresión sin pérdida de Huffman, operando mediante la manipulación a nivel de bits para la lectura y escritura de archivos.
 
-## 👥 Roles
+## 👥 Integrantes
 * *Integrante 1:* Contreras Calizaya, Alejandro
 * *Integrante 2:* Vela Rosales, Mauricio Gonzalo
 * *Integrante 3:* Cordova Meza, Diego Angel
