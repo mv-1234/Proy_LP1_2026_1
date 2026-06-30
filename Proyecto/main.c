@@ -1,12 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "huffman_jpeg.h"
 
 int main(int argc, char *argv[]) {
-    // Requerimos una bandera de operacion y archivos in/out
     if (argc < 4) {
-        printf("Uso para comprimir:   %s -c <imagen.jpg> <archivo.huf>\n", argv[0]);
-        printf("Uso para descomprimir: %s -d <archivo.huf> <salida.jpg>\n", argv[0]);
+        printf("Uso: %s <bandera> <archivo_in> <archivo_out>\n", argv[0]);
+        printf("  -c : Comprimir (ej. -c foto.bmp salida.huf)\n");
+        printf("  -d : Descomprimir (ej. -d salida.huf foto_reconstruida.jpg)\n");
         return 1;
     }
 
@@ -19,19 +22,21 @@ int main(int argc, char *argv[]) {
         unsigned char *pixeles = stbi_load(input, &ancho, &alto, &canales, 0);
         
         if (!pixeles) {
-            printf("Error al cargar la imagen.\n");
+            fprintf(stderr, "Error: No se pudo cargar la imagen '%s'. Verifica la ruta.\n", input);
             return 1;
         }
 
         comprimir_estilo_jpeg(pixeles, ancho, alto, canales, output);
         stbi_image_free(pixeles);
+        printf("Proceso de compresion finalizado.\n");
 
     } else if (strcmp(modo, "-d") == 0) {
-        // La logica de stb_image_write ya esta dentro de la funcion en huffman_jpeg.c
+        // La descompresión reconstruye el archivo JPG usando la metadata interna
         decodificar_estilo_jpeg(input, output);
+        printf("Proceso de descompresion finalizado.\n");
         
     } else {
-        printf("Modo no reconocido. Use -c (comprimir) o -d (descomprimir).\n");
+        fprintf(stderr, "Error: Modo '%s' no reconocido. Use -c o -d.\n", modo);
         return 1;
     }
 
